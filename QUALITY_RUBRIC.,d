@@ -1,0 +1,1144 @@
+# QUALITY_RUBRIC.md
+
+## Purpose
+
+Use this rubric to evaluate an `EXECUTION_CONTRACT_TEMPLATE.md` instance before handing it to a builder.
+
+The rubric asks whether the proposed execution system is:
+
+- concrete;
+- internally consistent;
+- verifiable;
+- recoverable;
+- resumable;
+- enforceable where claimed;
+- appropriately simple.
+
+This rubric evaluates the **quality of the specification**.
+
+It does not prove that:
+
+- required tools actually exist;
+- enforcement mechanisms were installed;
+- tests were executed;
+- implementation succeeded;
+- verification passed.
+
+Those claims require execution evidence.
+
+---
+
+# 1. Review Outcomes
+
+Use one of three outcomes.
+
+## PASS
+
+The first bounded task can begin without the builder inventing consequential control logic.
+
+Minor non-blocking gaps may remain if they are explicitly documented.
+
+## REVISE
+
+The contract is directionally usable but contains defects that should be repaired before execution.
+
+Examples:
+
+- ambiguous exclusions;
+- incomplete verification mapping;
+- weak recovery detail;
+- unnecessary complexity.
+
+## BLOCKED
+
+Execution should not begin because a critical requirement is unresolved.
+
+Examples:
+
+- success cannot be judged;
+- authoritative requirements conflict;
+- required environment or permission is unavailable;
+- destructive action lacks an approval boundary;
+- no safe recovery path exists for a high-risk action.
+
+---
+
+# 2. Severity Levels
+
+Classify findings before calculating any overall result.
+
+### Critical
+
+A defect that can make execution unsafe, directionless, or incapable of proving success.
+
+A single unresolved Critical finding prevents `ready_for_builder`.
+
+### Major
+
+A defect likely to cause rework, scope drift, weak verification, poor recovery, or misleading state.
+
+Major findings normally require revision.
+
+### Minor
+
+A clarity, maintainability, or efficiency problem that does not materially prevent safe execution.
+
+Minor findings may remain if explicitly accepted.
+
+---
+
+# 3. Hard-Fail Conditions
+
+A contract cannot pass while any applicable condition below is true.
+
+```text
+[ ] No observable project outcome is defined.
+[ ] The first active task has no bounded scope.
+[ ] A consequential acceptance criterion has no evaluator or evidence path.
+[ ] Required authority conflicts remain unresolved.
+[ ] The contract depends on a capability known to be unavailable.
+[ ] A high-impact action lacks a required approval or safety gate.
+[ ] A repeatable repair loop has no finite stop condition.
+[ ] The builder is expected to make a consequential unresolved product,
+    architecture, security, or policy decision without authority.
+[ ] The contract claims something is enforced when only prose exists.
+[ ] The contract claims something is verified without actual evidence.
+[ ] Recovery from a foreseeable high-impact failure would require an
+    unauthorized destructive action.
+```
+
+If any applicable item is true, outcome = `BLOCKED` or `REVISE`, depending on whether the defect can be repaired from available information.
+
+---
+
+# 4. Dimension A — Objective and Scope
+
+## QR-A1 — The outcome is behavioral
+
+**Question**
+
+Does the contract define what becomes observably true rather than merely what code should be written?
+
+Good:
+
+> An authenticated user can update their email and the new address persists after re-login.
+
+Weak:
+
+> Add an email settings component.
+
+**Failure mode detected**
+
+Implementation can technically satisfy the wording while missing the desired result.
+
+**Pass evidence**
+
+The objective and top-level success criteria describe observable outcomes.
+
+---
+
+## QR-A2 — Scope boundaries are explicit
+
+Check:
+
+```text
+[ ] In-scope behavior is named.
+[ ] Out-of-scope adjacent work is named where scope creep is plausible.
+[ ] Permitted change surfaces are bounded where useful.
+[ ] Incidental discoveries have a routing rule.
+```
+
+**Failure mode detected**
+
+The agent starts “helpful” adjacent work and under-finishes the requested behavior.
+
+**Critical when**
+
+Unbounded scope could trigger destructive or externally visible changes.
+
+---
+
+## QR-A3 — Scope does not silently expand through repair
+
+**Question**
+
+Could any listed repair route materially change the objective, architecture, permissions, or acceptance criteria without updating the contract?
+
+If yes, fail this item.
+
+A significant repair-induced expansion must become a contract change or dependency task.
+
+---
+
+# 5. Dimension B — Facts and Decisions
+
+## QR-B1 — Facts, assumptions, decisions, and unknowns are separated
+
+Check that:
+
+- unsupported beliefs are not labeled facts;
+- decisions are not disguised as requirements;
+- unknowns are visible;
+- assumptions include invalidation conditions when material.
+
+**Failure mode detected**
+
+False certainty propagates into implementation.
+
+---
+
+## QR-B2 — Consequential claims have an authority
+
+Every important claim should answer:
+
+> Where would we look if this claim were disputed?
+
+Examples:
+
+```text
+required behavior → product specification
+current code → repository
+live deployed behavior → runtime environment
+current CI status → CI system
+```
+
+**Failure mode detected**
+
+Conflicting sources are reconciled arbitrarily.
+
+---
+
+## QR-B3 — Freshness is handled where necessary
+
+Ask:
+
+- Can this fact change independently?
+- If yes, when must it be refreshed?
+- What event invalidates the current value?
+
+**Major finding**
+
+A mutable external fact is used as if permanently true.
+
+---
+
+# 6. Dimension C — Operational Readiness
+
+## QR-C1 — Required capabilities are distinguished from available capabilities
+
+For each required capability:
+
+```text
+required?
+status?
+evidence?
+```
+
+**Failure mode detected**
+
+The contract depends on fictional infrastructure.
+
+---
+
+## QR-C2 — Initialization is separated from feature work where necessary
+
+If the builder cannot currently:
+
+- start the relevant system;
+- run required verification;
+- observe failures;
+- persist/resume state;
+
+then initialization should be represented explicitly.
+
+**Failure mode detected**
+
+Feature implementation becomes entangled with environment discovery.
+
+---
+
+## QR-C3 — Readiness claims require evidence
+
+A sentence such as:
+
+> Tests are available.
+
+is weaker than:
+
+```text
+Test command: [...]
+Observed result: [...]
+```
+
+At design time, actual evidence may not yet exist. In that case the contract should say `unverified`, not pretend readiness has been demonstrated.
+
+---
+
+# 7. Dimension D — Task Quality
+
+## QR-D1 — Tasks represent meaningful behaviors
+
+Reject task decomposition dominated by implementation trivia such as:
+
+```text
+create file
+add import
+write helper
+rename variable
+```
+
+unless those truly are standalone operational tasks.
+
+A good task produces a meaningful, verifiable behavioral increment.
+
+---
+
+## QR-D2 — Task granularity is executable
+
+Each active task should be small enough that:
+
+- its scope can be understood;
+- verification can be completed;
+- recovery can be localized;
+- its state can meaningfully become `passing`.
+
+There is no universal size threshold.
+
+Use risk and dependency structure, not arbitrary line counts.
+
+---
+
+## QR-D3 — Dependencies are explicit
+
+Check:
+
+```text
+[ ] Required predecessor work is listed.
+[ ] External dependencies are listed.
+[ ] Newly discovered prerequisites have a route.
+[ ] Circular dependencies are absent or explicitly resolved.
+```
+
+**Failure mode detected**
+
+Tasks begin before their real prerequisites exist.
+
+---
+
+## QR-D4 — Active WIP is intentionally bounded
+
+Default expectation:
+
+```text
+active implementation work = 1
+```
+
+Parallel work may pass if the contract justifies:
+
+- independence;
+- isolation;
+- state ownership;
+- integration;
+- post-integration verification.
+
+**Correction to overbroad course guidance**
+
+WIP=1 is a safe default, not an absolute law.
+
+---
+
+# 8. Dimension E — Verification
+
+## QR-E1 — Every acceptance criterion maps to evidence
+
+For every criterion:
+
+```text
+criterion
+→ evaluator
+→ check
+→ expected evidence
+→ invalidation condition
+```
+
+If any consequential criterion stops before evidence, it is not execution-ready.
+
+---
+
+## QR-E2 — Verification matches the behavior's level
+
+Examples:
+
+A pure calculation may need only a deterministic unit test.
+
+A cross-service user flow may require integration or end-to-end verification.
+
+A usability criterion may need structured human evaluation.
+
+**Failure mode detected**
+
+A narrow proxy is treated as proof of broader behavior.
+
+---
+
+## QR-E3 — Proposed checks are not mistaken for executed checks
+
+Distinguish:
+
+```text
+specified
+mechanized
+verified
+```
+
+A contract receives no extra credit for describing excellent tests if the status section falsely says they have passed.
+
+---
+
+## QR-E4 — Evaluator independence is described accurately
+
+If the contract says `independent review`, verify actual separation.
+
+Acceptable mechanisms may include:
+
+- fresh evaluator context;
+- separate agent/session;
+- deterministic external test;
+- human reviewer;
+- isolated verification environment.
+
+Same-agent same-context reconsideration = self-review.
+
+**Critical finding**
+
+A high-risk contract relies on falsely labeled independent evaluation.
+
+---
+
+## QR-E5 — Verification can be invalidated
+
+Ask whether later changes can invalidate old evidence.
+
+If yes, the contract should identify the trigger or impact-analysis mechanism.
+
+**Failure mode detected**
+
+Historical passing results are treated as permanent truth.
+
+---
+
+# 9. Dimension F — Loop Control
+
+## QR-F1 — Entry conditions are explicit
+
+Before an action loop begins, can the executor tell whether it is allowed to start?
+
+If the answer requires guessing, revise.
+
+---
+
+## QR-F2 — Every failure has a route
+
+At minimum, a failed verification should be routable toward:
+
+```text
+repair
+diagnosis
+blocked dependency
+decision/escalation
+controlled stop
+```
+
+The contract does not need a route for impossible failure classes.
+
+---
+
+## QR-F3 — Retries are bounded
+
+Every repeatable action must have a finite limiting mechanism:
+
+```text
+attempt count
+time
+cost
+risk
+or a combination
+```
+
+“Retry until successful” is an automatic failure.
+
+---
+
+## QR-F4 — Retries incorporate new information
+
+Ask:
+
+> After failure N, what must be different before attempt N+1?
+
+If nothing must change, the repair loop is poorly designed.
+
+---
+
+## QR-F5 — Repeated failure leads to diagnosis or escalation
+
+The contract should not simply increase effort after the same failure pattern repeats.
+
+**Failure mode detected**
+
+An agent burns its entire budget repeating an incorrect theory.
+
+---
+
+## QR-F6 — Success, blocked, and abort exits exist
+
+A robust loop can terminate in more than one honest state.
+
+Reject designs with only:
+
+```text
+success
+or keep going
+```
+
+---
+
+# 10. Dimension G — Recovery
+
+## QR-G1 — Meaningful checkpoints exist
+
+Ask:
+
+> If the next risky action fails, where do we safely return?
+
+A checkpoint is useful only if it corresponds to an identifiable trustworthy state.
+
+---
+
+## QR-G2 — Recovery is local where possible
+
+Prefer:
+
+```text
+repair step
+→ task checkpoint
+→ task-start checkpoint
+→ broader rollback
+```
+
+over full-project resets.
+
+**Failure mode detected**
+
+Local defects destroy unrelated verified work.
+
+---
+
+## QR-G3 — Recovery itself is verified
+
+A rollback or restore action must not automatically imply a healthy system.
+
+The contract should require affected readiness/behavior checks afterward.
+
+---
+
+## QR-G4 — Failure knowledge survives rollback
+
+The contract should preserve:
+
+- what failed;
+- why it failed;
+- what was attempted;
+- what should not be repeated.
+
+Otherwise recovery restores code while deleting learning.
+
+---
+
+# 11. Dimension H — Persistent State and Handoff
+
+## QR-H1 — Resume-critical state exists outside hidden conversation history
+
+A fresh executor should be able to reconstruct:
+
+```text
+contract version
+current task
+task state
+last trustworthy checkpoint
+verification state
+known failures
+blockers
+remaining budget
+next action
+```
+
+---
+
+## QR-H2 — Specification and execution status are separate
+
+Bad:
+
+```text
+Login test passes.
+```
+
+when no test has been executed.
+
+Good:
+
+```text
+Requirement:
+Login test must pass.
+
+Current state:
+not yet verified.
+```
+
+---
+
+## QR-H3 — Handoffs are honest
+
+A clean handoff can say:
+
+```text
+blocked
+verification failed
+awaiting decision
+```
+
+Clean means reconstructable, not successful.
+
+---
+
+## QR-H4 — Next action is explicit
+
+A strong handoff tells a fresh session exactly what is currently permitted.
+
+Weak:
+
+> Continue fixing login.
+
+Strong:
+
+> Inspect the failed token-refresh integration result recorded in E17; do not modify the database schema unless the failure is reclassified as a schema dependency.
+
+---
+
+# 12. Dimension I — Enforcement Integrity
+
+## QR-I1 — Instructions and mechanisms are distinguished
+
+For every consequential rule, ask:
+
+1. What does the document require?
+2. What actually enforces it?
+3. What proves enforcement occurred?
+
+Example:
+
+```text
+Requirement:
+Only one implementation task may be active.
+
+Mechanism:
+State controller rejects a second active transition.
+
+Evidence:
+Transition log showing rejection.
+```
+
+If only the first line exists, the rule is advisory.
+
+---
+
+## QR-I2 — Advisory controls are labeled advisory
+
+**Critical wording test**
+
+Search the contract for:
+
+```text
+prevent
+guarantee
+enforce
+automatically
+always
+cannot
+independent
+persistent
+```
+
+Verify that the claimed mechanism really supports the word.
+
+---
+
+## QR-I3 — Consequential rules define violation responses
+
+A rule without a response to violation is often just advice.
+
+For major rules, verify the contract states what happens after breach.
+
+Examples:
+
+```text
+stop execution
+revert unauthorized change
+mark evidence stale
+block task
+escalate
+rerun verification
+```
+
+---
+
+# 13. Dimension J — Internal Consistency
+
+## QR-J1 — No section contradicts another
+
+Check especially:
+
+```text
+scope vs task list
+task state vs evidence
+permissions vs permitted actions
+dependency graph vs activation order
+acceptance criteria vs verification
+retry budget vs loop description
+authority map vs assumptions
+handoff vs actual task state
+```
+
+Any contradiction affecting execution is at least Major.
+
+---
+
+## QR-J2 — Identical concepts use consistent terminology
+
+Examples:
+
+Do not use `done`, `complete`, `verified`, and `passing` interchangeably unless explicitly defined.
+
+Do not use `review` to sometimes mean approval and sometimes mean technical verification.
+
+---
+
+## QR-J3 — Parent completion is not inferred from child completion
+
+For decomposed work:
+
+```text
+all children passing
+```
+
+does not automatically mean:
+
+```text
+parent objective passing
+```
+
+unless parent integration criteria have also been verified.
+
+---
+
+# 14. Dimension K — Complexity Discipline
+
+## QR-K1 — Every mechanism addresses a concrete failure mode
+
+For each:
+
+- file;
+- gate;
+- agent;
+- reviewer;
+- state field;
+- graph node;
+- approval;
+- automation;
+
+ask:
+
+> What failure does this prevent or detect?
+
+If there is no good answer, remove it.
+
+---
+
+## QR-K2 — Deterministic mechanisms are preferred where sufficient
+
+Do not create a model evaluator to answer a question a deterministic test can settle more cheaply and consistently.
+
+Likewise, do not create an automated binary proxy for a genuinely qualitative judgment merely to avoid human review.
+
+Use the simplest evaluator adequate to the criterion.
+
+---
+
+## QR-K3 — A graph is justified by control-flow needs, not fashion
+
+Multiple steps alone do not justify graph orchestration.
+
+Graph/multi-agent complexity should normally correspond to some combination of:
+
+- independent work;
+- branching;
+- rollback to different nodes;
+- isolated evaluation;
+- parallelism;
+- shared state;
+- approval paths.
+
+If the process is essentially linear, prefer a workflow or single loop.
+
+---
+
+## QR-K4 — Coordination cost is acknowledged
+
+When using parallel agents or multiple evaluators, the contract should account for:
+
+- merge/integration burden;
+- state reconciliation;
+- review bandwidth;
+- conflicting outputs.
+
+Generating more work is not itself a benefit.
+
+---
+
+## QR-K5 — The design can be simplified later
+
+Long-lived mechanisms should ideally state a reevaluation trigger.
+
+Examples:
+
+```text
+remove manual gate once equivalent automated check is proven reliable
+revisit WIP=1 if tasks become independently isolated
+retire compatibility check when legacy API is removed
+```
+
+The harness should not become permanent ceremony.
+
+---
+
+# 15. Dimension L — Builder Resumability Test
+
+Perform this as the final practical test.
+
+Assume a fresh builder has:
+
+- no hidden conversation history;
+- the execution contract;
+- the listed sources;
+- the stated tools.
+
+Ask whether the builder can answer all of these:
+
+```text
+1. What outcome am I creating?
+2. What must I not change?
+3. Which facts control my decisions?
+4. What uncertainty remains?
+5. Is the environment actually ready?
+6. Which task may I start?
+7. What tools/actions may I use?
+8. What evidence proves the task passes?
+9. Who or what evaluates that evidence?
+10. What do I do after a failure?
+11. How many repair attempts are allowed?
+12. When must I stop?
+13. What requires escalation?
+14. Where is the recovery point?
+15. How do I know recovery succeeded?
+16. What state must I persist?
+17. What is the next permitted action after handoff?
+18. What changes would invalidate existing evidence?
+```
+
+If the builder must invent a consequential answer, the contract is not ready.
+
+---
+
+# 16. Recommended Review Procedure
+
+Review in this order:
+
+```text
+1. Hard-fail conditions
+2. Objective and scope
+3. Facts and authority
+4. Readiness and permissions
+5. Task boundaries
+6. Verification
+7. Loop control
+8. Recovery
+9. Persistence/handoff
+10. Enforcement integrity
+11. Internal consistency
+12. Complexity
+13. Fresh-builder resumability
+```
+
+This order matters.
+
+Do not spend time optimizing graph topology when the objective itself is still ambiguous.
+
+---
+
+# 17. Finding Record
+
+Record material defects in this format:
+
+```text
+FINDING_ID:
+QR-[...]
+
+SEVERITY:
+critical | major | minor
+
+ISSUE:
+[...]
+
+FAILURE MODE:
+[...]
+
+EVIDENCE:
+[...]
+
+REQUIRED REPAIR:
+[...]
+
+STATUS:
+open | repaired | accepted_exception
+```
+
+Accepted exceptions require:
+
+```text
+OWNER:
+[...]
+
+RATIONALE:
+[...]
+
+RISK:
+[...]
+
+REVISIT_TRIGGER:
+[...]
+```
+
+Do not use `accepted_exception` merely to bypass difficult problems.
+
+---
+
+# 18. Optional Scoring
+
+**Default:** Use severity-based judgment rather than a numeric score.
+
+A numeric score can create false precision and Goodhart behavior.
+
+If a project specifically needs scoring, use it only as a secondary summary after hard-fail conditions and qualitative review.
+
+Example project-dependent scheme:
+
+```text
+0 = absent / contradictory
+1 = materially weak
+2 = adequate
+3 = strong
+```
+
+Do not average away Critical findings.
+
+A contract with excellent documentation and no valid verification path still fails.
+
+---
+
+# 19. Worked Review Example
+
+## Proposed Contract Fragment
+
+```text
+Task:
+Add user authentication.
+
+Scope:
+Implement login, registration, password reset, and OAuth.
+
+Verification:
+Run unit tests.
+
+Retries:
+Retry until tests pass.
+
+Review:
+Implementing agent reviews its own work.
+
+State:
+done after code is written.
+```
+
+## Rubric Result
+
+```text
+OUTCOME:
+REVISE
+```
+
+### Finding 1
+
+```text
+SEVERITY:
+major
+
+ISSUE:
+Task scope combines multiple independently meaningful behaviors.
+
+FAILURE MODE:
+Overreach and under-finish.
+
+REPAIR:
+Decompose the work and select one active behavioral task.
+```
+
+### Finding 2
+
+```text
+SEVERITY:
+critical
+
+ISSUE:
+Unit tests are the only completion evidence for a cross-component authentication flow.
+
+FAILURE MODE:
+Component boundary defects can pass unnoticed.
+
+REPAIR:
+Define the required integration/end-to-end passing gate.
+```
+
+### Finding 3
+
+```text
+SEVERITY:
+critical
+
+ISSUE:
+Retry loop is unbounded.
+
+FAILURE MODE:
+Infinite or wasteful repair cycle.
+
+REPAIR:
+Define finite retry/resource budget and escalation route.
+```
+
+### Finding 4
+
+```text
+SEVERITY:
+major
+
+ISSUE:
+Self-review is described as review without acknowledging lack of independence.
+
+FAILURE MODE:
+Producer bias survives evaluation.
+
+REPAIR:
+Label it self-review or introduce an independent evaluator where required.
+```
+
+### Finding 5
+
+```text
+SEVERITY:
+critical
+
+ISSUE:
+Code existence controls completion.
+
+FAILURE MODE:
+Unverified implementation is reported as done.
+
+REPAIR:
+Make the passing transition dependent on acceptance evidence.
+```
+
+The problem here is not that the contract lacks detail.
+
+It lacks **control**.
+
+---
+
+# 20. Final Review Record
+
+Append this to every completed execution contract:
+
+```text
+QUALITY_REVIEW
+
+OUTCOME:
+PASS | REVISE | BLOCKED
+
+CRITICAL_FINDINGS_OPEN:
+[...]
+
+MAJOR_FINDINGS_OPEN:
+[...]
+
+MINOR_FINDINGS_OPEN:
+[...]
+
+ACCEPTED_EXCEPTIONS:
+[...]
+
+SIMPLIFICATIONS_MADE:
+[...]
+
+CONTRADICTIONS_REPAIRED:
+[...]
+
+UNVERIFIABLE_CLAIMS_REPAIRED:
+[...]
+
+RECOVERY_GAPS_REPAIRED:
+[...]
+
+UNAVAILABLE_CAPABILITIES:
+[...]
+
+FINAL_BUILDER_ENTRY_STATUS:
+ready | not_ready
+
+REASON:
+[...]
+```
+
+---
+
+# 21. Definition of a High-Quality Execution Contract
+
+A high-quality contract does not attempt to predict every action a builder will take.
+
+It creates enough structure that consequential decisions are not left implicit.
+
+A fresh builder should be able to:
+
+- understand the objective;
+- select the correct context;
+- trust the correct sources;
+- determine whether execution may begin;
+- activate one bounded task;
+- stay inside its permitted scope;
+- distinguish implementation from verification;
+- classify and repair failures within a budget;
+- stop rather than loop forever;
+- escalate decisions it does not own;
+- recover without destroying unrelated valid work;
+- prove success with current evidence;
+- persist enough state for another session to continue.
+
+The best contract is therefore not the longest contract.
+
+It is the **smallest contract that makes the important control flow explicit, verifiable, and recoverable without inventing nonexistent mechanisms.**
